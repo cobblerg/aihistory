@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 AI 역사 인포그래픽 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .timeline-line {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 4px;
+            background-color: #e5e7eb; transform: translateX(-50%);
+        }
+        .timeline-dot {
+            position: absolute; left: 50%; top: 1.5rem; width: 24px; height: 24px;
+            background-color: white; border: 4px solid #93c5fd; border-radius: 50%;
+            transform: translateX(-50%); z-index: 10;
+        }
+        .timeline-item:nth-child(even) .timeline-content { margin-left: calc(50% + 2rem); }
+        .timeline-item:nth-child(odd) .timeline-content { margin-right: calc(50% + 2rem); text-align: right; }
+
+        @media (max-width: 768px) {
+            .timeline-line { left: 20px; transform: translateX(0); }
+            .timeline-dot { left: 20px; transform: translateX(-50%); }
+            .timeline-item:nth-child(even) .timeline-content,
+            .timeline-item:nth-child(odd) .timeline-content {
+                margin-left: 4rem; margin-right: 1rem; text-align: left; width: calc(100% - 5rem);
+            }
+            .timeline-item:nth-child(odd) .timeline-content { text-align: left; }
+        }
+        .loader {
+            border: 5px solid #f3f3f3; border-top: 5px solid #3498db;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); z-index: 40;
+        }
+        .modal-content {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-bold text-blue-600">나만의 AI 역사 인포그래픽 만들기</h1>
+            <p class="text-gray-600 mt-2">AI 역사의 중요 사건들을 직접 탐색하고 채워나가며 인포그래픽을 완성해보세요.</p>
+        </header>
+
+        <!-- Step 1: 대상 선택 -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-xl font-bold mb-4 text-center">1. 대상 그룹 선택</h2>
+            <div class="flex justify-center flex-wrap gap-2 md:gap-4" id="level-selector">
+                <button data-level="elementary" class="level-btn bg-gray-200 hover:bg-blue-500 hover:text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">초등학생</button>
+                <button data-level="middle" class="level-btn bg-gray-200 hover:bg-blue-500 hover:text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">중학생</button>
+                <button data-level="high" class="level-btn bg-gray-200 hover:bg-blue-500 hover:text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">고등학생</button>
+                <button data-level="general" class="level-btn bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">일반</button>
+            </div>
+        </div>
+
+        <!-- Step 2: 키워드 탐색 및 내용 입력 -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h2 class="text-xl font-bold mb-4 text-center">2. AI 역사 키워드 탐색 및 내용 입력하기</h2>
+            <div id="keyword-workshop" class="space-y-4">
+                <!-- 키워드 카드들이 여기에 동적으로 생성됩니다. -->
+            </div>
+            <div class="mt-6 text-center">
+                <button id="add-keyword" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">+ 키워드 추가</button>
+            </div>
+        </div>
+
+        <!-- Step 3: 인포그래픽 생성 -->
+        <div class="text-center my-10">
+            <button id="generate-infographic" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 px-10 rounded-xl transition-colors shadow-lg">
+                ✨ 나만의 인포그래픽 생성하기!
+            </button>
+        </div>
+
+        <!-- 최종 인포그래픽이 표시될 컨테이너 -->
+        <div id="infographic-container" class="relative mt-12"></div>
+    </div>
+
+    <!-- 힌트 모달 -->
+    <div id="hint-modal" class="hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 max-w-2xl">
+            <h3 id="hint-title" class="text-2xl font-bold mb-4">힌트 보기</h3>
+            <div class="bg-gray-100 p-4 rounded-md">
+                <p class="mb-2"><strong>시기:</strong> <span id="hint-year"></span></p>
+                <p><strong>설명:</strong> <span id="hint-description"></span></p>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="close-hint-modal" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">닫기</button>
+                <button id="copy-hint" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">내용 채우기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hintData = [
+            { id: "turing_test", year: "1950", event: "튜링 테스트", keyFigure: "앨런 튜링", icon: "🤔", imagePrompt: "1950년대 컴퓨터 과학자 앨런 튜링이 터미널에서 튜링 테스트의 개념을 설명하며 사색에 잠겨 있는 흑백 사진", descriptions: { elementary: "컴퓨터가 사람처럼 생각할 수 있는지 알아보는 '생각 기계' 시험이에요. 기계랑 대화하면서 상대방이 사람인지 기계인지 맞추는 거죠!", middle: "기계가 인간과 얼마나 유사하게 대화할 수 있는지를 기준으로 지능을 판별하는 시험입니다. 기계가 인간을 성공적으로 속일 수 있다면 지능이 있다고 간주하는 개념이죠.", high: "기계의 지능적 행동을 인간의 행동과 구별할 수 없을 때 해당 기계가 '생각'할 수 있다고 봐야 한다는 개념을 제시한 사고 실험입니다. 인공지능의 철학적 기반이 되었습니다.", general: "앨런 튜링이 제안한 기계 지능 판별 테스트로, 심사위원이 인간과 기계와 동시에 대화하여 둘을 구별할 수 없는 경우 기계가 지능을 가졌다고 판단합니다." } },
+            { id: "dartmouth", year: "1956", event: "다트머스 회의", keyFigure: "존 매카시 등", icon: "💡", imagePrompt: "1950년대 대학 회의실에서 학자들이 다이어그램과 공식으로 가득 찬 칠판 주위에 모여 협력하는 모습. '인공 지능'이라는 용어가 탄생한 다트머스 회의를 표현.", descriptions: { elementary: "'인공지능'이라는 말이 처음 사용된 모임이에요. 똑똑한 컴퓨터를 만들자고 여러 과학자들이 모여 약속했어요.", middle: "미국의 다트머스 대학에서 열린 학술회의로, '인공지능(Artificial Intelligence)'이라는 용어가 공식적으로 처음 사용되었습니다. AI 연구 분야의 시작을 알린 중요한 사건입니다.", high: "존 매카시가 주최한 워크숍으로, '학습이나 지능의 다른 모든 특징을 정밀하게 기술하여 기계가 이를 시뮬레이션할 수 있게 만드는 것'을 목표로 AI 분야를 정립했습니다.", general: "AI 분야의 공식적인 출범을 알린 학술회의. '생각하는 기계'에 대한 연구를 하나의 학문 분야로 정립하고 '인공지능'이라는 명칭을 부여하며 향후 연구의 기틀을 마련했습니다." } },
+            { id: "eliza", year: "1966", event: "최초의 챗봇, ELIZA", keyFigure: "조셉 바이첸바움", icon: "💬", imagePrompt: "간단한 텍스트 기반 대화를 보여주는 1960년대 녹색 화면 컴퓨터 터미널. 최초의 챗봇인 ELIZA가 사용자와 상호 작용하는 모습.", descriptions: { elementary: "사람들이랑 컴퓨터가 처음으로 대화를 나눌 수 있게 만든 프로그램이에요. 의사 선생님처럼 사람들의 말을 따라하며 대답해줬답니다.", middle: "최초의 자연어 처리 프로그램 중 하나로, 사용자의 말을 패턴 매칭을 통해 재구성하여 응답함으로써 간단한 대화를 수행했습니다.", high: "정신과 의사와의 상담을 모방한 챗봇입니다. 인간이 기계와의 상호작용에서 얼마나 쉽게 감정적 연결을 형성하는지 보여주어 윤리적 논쟁을 일으키기도 했습니다.", general: "MIT에서 개발된 초기 자연어 처리 프로그램. 패턴 인식과 키워드 기반 응답 생성이라는 간단한 원리로 작동했지만, 'ELIZA 효과'를 보여준 중요한 사례입니다." } },
+            { id: "ai_winter", year: "1974-1980", event: "첫 번째 AI의 겨울", keyFigure: "학계 및 정부", icon: "❄️", imagePrompt: "어둡고 버려진 실험실 안에서 서리에 덮여 얼어붙고 비활성화된 로봇의 상징적인 이미지. 연구 자금과 관심이 줄어든 'AI 겨울' 시기를 표현.", descriptions: { elementary: "사람들이 AI에 대한 기대가 너무 컸는데, 생각보다 발전이 더뎌서 잠시 연구를 쉬어갔던 시기예요.", middle: "AI에 대한 과도한 예측과 달리 실질적인 성과가 부족하여 정부와 기업의 연구 자금 지원이 크게 줄어든 침체기입니다.", high: "초기 AI 기술의 한계가 드러나면서, 약속했던 성과를 내지 못하자 연구 자금이 끊기고 대중의 관심이 식었던 시기입니다.", general: "AI 연구의 첫 번째 주요 침체기. 당시 기술로는 해결할 수 없는 복잡성에 직면하고, 실용적인 결과물을 내놓지 못하면서 연구비 삭감과 학문적 비관론이 팽배했던 시기입니다." } },
+            { id: "deep_blue", year: "1997", event: "딥블루 vs 카스파로프", keyFigure: "IBM", icon: "♟️", imagePrompt: "1990년대, 진지한 표정의 남자(게리 카스파로프)와 거대하고 위압적인 IBM 슈퍼컴퓨터(딥 블루) 사이의 치열한 체스 경기. 긴장감 넘치고 역사적인 분위기.", descriptions: { elementary: "컴퓨터 '딥블루'가 세계 체스 챔피언을 이겼어요! 기계가 사람의 지능을 특정 분야에서 넘어선 사건이었죠.", middle: "IBM의 슈퍼컴퓨터 '딥블루'가 당시 세계 체스 챔피언인 가리 카스파로프를 공식 경기에서 꺾은 사건입니다. AI의 계산 능력을 전 세계에 증명했습니다.", high: "엄청난 양의 경우의 수를 계산하는 '무차별 대입 탐색' 방식을 통해 인간 최고수를 이긴 사례로, 인간의 직관과 기계의 계산 능력 대결로 큰 주목을 받았습니다.", general: "인간의 고유 영역으로 여겨지던 체스에서 AI가 세계 챔피언을 이긴 상징적인 사건. 특정 문제에 최적화된 AI가 인간의 지능을 능가할 수 있음을 보여주었습니다." } },
+            { id: "alexnet", year: "2012", event: "딥러닝 혁명 (AlexNet)", keyFigure: "제프리 힌튼 연구팀", icon: "🧠", imagePrompt: "빛나는 노드와 연결선이 있는 미래적인 디지털 신경망. 이미지 인식을 혁신한 AlexNet의 딥러닝 돌파구를 표현.", descriptions: { elementary: "컴퓨터가 스스로 배우는 '딥러닝' 기술이 크게 발전했어요. 사진만 보고 고양이인지 강아지인지 구별할 수 있게 된 거죠!", middle: "이미지 인식 경진대회에서 'AlexNet'이라는 딥러닝 모델이 압도적인 성능으로 우승하며 딥러닝의 가능성을 증명했습니다. AI 연구의 패러다임을 바꾸는 계기가 되었습니다.", high: "합성곱 신경망(CNN)과 GPU를 활용한 심층 신경망 모델인 AlexNet이 이미지넷 챌린지에서 오류율을 획기적으로 낮추며 우승했습니다.", general: "대규모 이미지 데이터셋과 GPU를 활용한 심층 신경망 'AlexNet'의 등장은 AI의 새로운 황금기를 연 '빅뱅'으로 평가됩니다." } },
+            { id: "alphago", year: "2016", event: "알파고 vs 이세돌", keyFigure: "구글 딥마인드", icon: "⚫️⚪️", imagePrompt: "집중하는 인간 기사(이세돌)와 AI를 대표하는 차분한 인물(알파고) 사이의 바둑판을 둘러싼 드라마틱한 장면. 많은 관중이 지켜보고 있음.", descriptions: { elementary: "인공지능 '알파고'가 세계 최고의 바둑 기사 이세돌 9단을 이겼어요. 모두를 깜짝 놀라게 했죠.", middle: "구글 딥마인드가 개발한 AI '알파고'가 세계 최정상급 바둑 기사 이세돌 9단과의 대결에서 4:1로 승리했습니다. 인간의 직관과 창의성의 영역을 AI가 정복한 사건입니다.", high: "몬테카를로 트리 탐색과 심층 신경망을 결합한 강화학습 기반의 AI가 복잡성과 직관이 요구되는 바둑에서 인간 최고수를 이김으로써 AI의 가능성을 보여주었습니다.", general: "'알파고 쇼크'로 불리며 전 세계에 AI의 발전상을 각인시킨 사건. AI가 인간의 지식을 학습하고 이를 넘어 새로운 전략을 창출할 수 있음을 입증했습니다." } },
+            { id: "generative_ai", year: "2020s", event: "생성형 AI의 시대", keyFigure: "OpenAI, Google 등", icon: "✨", imagePrompt: "AI가 예술 작품을 만들고, 시를 쓰고, 음악을 작곡하는 모습을 보여주는 활기차고 창의적인 디지털 콜라주. GPT-4와 DALL-E와 같은 생성형 AI의 다재다능함을 상징.", descriptions: { elementary: "이제 AI는 스스로 그림을 그리고, 글을 쓰고, 음악도 만들 수 있게 됐어요! 마법사 같아요.", middle: "대규모 언어 모델(LLM)을 기반으로 사용자의 요구에 따라 글, 이미지, 코드 등 새로운 콘텐츠를 창작하는 AI 기술이 대중화되었습니다.", high: "트랜스포머 아키텍처 기반의 거대 언어 모델(LLM)이 인간과 유사한 수준의 텍스트를 생성하고, 복잡한 추론까지 수행하게 되었습니다.", general: "인간의 창의성을 모방하고 확장하는 생성형 AI의 등장은 산업 전반에 혁신을 가져오고 있습니다. 생산성 향상과 함께 새로운 사회적 과제를 제시하며 AI 시대를 본격화하고 있습니다." } }
+        ];
+
+        const levelKeywords = {
+            elementary: ["turing_test", "deep_blue", "alphago", "generative_ai"],
+            middle: ["turing_test", "dartmouth", "deep_blue", "alphago", "generative_ai"],
+            high: ["turing_test", "dartmouth", "eliza", "ai_winter", "deep_blue", "alexnet", "alphago", "generative_ai"],
+            general: ["turing_test", "dartmouth", "eliza", "ai_winter", "deep_blue", "alexnet", "alphago", "generative_ai"],
+        };
+        
+        let currentLevel = 'general';
+        let customKeywordCount = 0;
+
+        const workshop = document.getElementById('keyword-workshop');
+        const levelSelector = document.getElementById('level-selector');
+        const hintModal = document.getElementById('hint-modal');
+
+        function renderWorkshop() {
+            workshop.innerHTML = '';
+            const keywordsToShow = levelKeywords[currentLevel];
+            keywordsToShow.forEach(id => {
+                const data = hintData.find(item => item.id === id);
+                if(data) {
+                    workshop.appendChild(createKeywordCard(data, false));
+                }
+            });
+        }
+        
+        function createKeywordCard(data = {}, isCustom = false) {
+            const cardId = isCustom ? `custom-${++customKeywordCount}` : data.id;
+            const card = document.createElement('div');
+            card.className = 'keyword-card border-2 border-gray-200 p-4 rounded-lg';
+            card.dataset.id = cardId;
+
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    ${isCustom ? `
+                    <input type="text" class="keyword-event-input text-lg font-bold border-b-2 p-1 w-2/3" value="" placeholder="키워드(사건명) 입력">
+                    ` : `
+                    <h3 class="text-lg font-bold">${data.event}</h3>
+                    `}
+                    <div>
+                        ${!isCustom ? `<button class="hint-btn bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-bold py-1 px-3 rounded-md" data-id="${data.id}">힌트 보기</button>` : ''}
+                        ${isCustom ? `<button class="remove-btn bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-md">삭제</button>` : ''}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="font-semibold text-sm">시기 (년도)</label>
+                        <input type="text" class="keyword-year-input w-full mt-1 p-2 border rounded" value="" placeholder="예: 1950">
+                    </div>
+                    <div>
+                        <label class="font-semibold text-sm">주요 인물/기관</label>
+                        <input type="text" class="keyword-figure-input w-full mt-1 p-2 border rounded" value="${isCustom ? '' : data.keyFigure}" placeholder="예: 앨런 튜링">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="font-semibold text-sm">설명</label>
+                    <textarea class="keyword-desc-input w-full mt-1 p-2 border rounded h-24" placeholder="조사한 내용을 바탕으로 설명을 입력하세요."></textarea>
+                </div>
+                 <div class="mt-4">
+                    <label class="font-semibold text-sm">이미지 생성 프롬프트 (한글)</label>
+                    <input type="text" class="keyword-prompt-input w-full mt-1 p-2 border rounded" value="${isCustom ? '' : data.imagePrompt}" placeholder="생성할 이미지에 대한 설명을 한글로 입력하세요.">
+                    <input type="hidden" class="keyword-icon-input" value="${isCustom ? '💡' : data.icon}">
+                </div>
+            `;
+            return card;
+        }
+
+        levelSelector.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentLevel = e.target.dataset.level;
+                document.querySelectorAll('.level-btn').forEach(btn => {
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-200');
+                });
+                e.target.classList.add('bg-blue-500', 'text-white');
+                renderWorkshop();
+            }
+        });
+
+        document.getElementById('add-keyword').addEventListener('click', () => {
+            workshop.appendChild(createKeywordCard({}, true));
+        });
+
+        workshop.addEventListener('click', e => {
+            const card = e.target.closest('.keyword-card');
+            if (!card) return;
+
+            if (e.target.classList.contains('hint-btn')) {
+                const id = e.target.dataset.id;
+                const data = hintData.find(item => item.id === id);
+                document.getElementById('hint-title').innerText = `${data.event} 힌트`;
+                document.getElementById('hint-year').innerText = data.year;
+                document.getElementById('hint-description').innerText = data.descriptions[currentLevel];
+                hintModal.dataset.targetId = id;
+                hintModal.classList.remove('hidden');
+            } else if (e.target.classList.contains('remove-btn')) {
+                card.remove();
+            }
+        });
+
+        document.getElementById('close-hint-modal').addEventListener('click', () => hintModal.classList.add('hidden'));
+
+        document.getElementById('copy-hint').addEventListener('click', () => {
+            const id = hintModal.dataset.targetId;
+            const data = hintData.find(item => item.id === id);
+            const card = workshop.querySelector(`.keyword-card[data-id="${id}"]`);
+            if (card && data) {
+                card.querySelector('.keyword-year-input').value = data.year;
+                card.querySelector('.keyword-desc-input').value = data.descriptions[currentLevel];
+            }
+            hintModal.classList.add('hidden');
+        });
+
+        document.getElementById('generate-infographic').addEventListener('click', () => {
+            const cards = workshop.querySelectorAll('.keyword-card');
+            const userData = [];
+            cards.forEach(card => {
+                const eventInput = card.querySelector('.keyword-event-input');
+                const event = eventInput ? eventInput.value : card.querySelector('h3').innerText;
+                const year = card.querySelector('.keyword-year-input').value;
+                if (event && year) {
+                     userData.push({
+                        id: `${year}-${event.replace(/\s+/g, '-')}`,
+                        event: event,
+                        year: year,
+                        keyFigure: card.querySelector('.keyword-figure-input').value,
+                        description: card.querySelector('.keyword-desc-input').value,
+                        imagePrompt: card.querySelector('.keyword-prompt-input').value,
+                        icon: card.querySelector('.keyword-icon-input').value,
+                    });
+                }
+            });
+            
+            userData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+            renderInfographicAndGenerateImages(userData);
+            document.getElementById('infographic-container').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        function renderInfographicAndGenerateImages(data) {
+            const container = document.getElementById('infographic-container');
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold mb-12 text-center text-blue-600">나의 AI 역사 인포그래픽</h2>
+                <div class="relative">
+                    <div class="timeline-line hidden md:block"></div>
+                </div>`;
+            
+            const timelineContainer = container.querySelector('.relative');
+
+            data.forEach(item => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item relative mb-8 md:mb-12 flex flex-col items-center';
+                const contentClass = 'timeline-content bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-400 w-full md:w-5/12';
+
+                timelineItem.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="${contentClass}">
+                        <h3 class="text-xl md:text-2xl font-bold text-blue-600">${item.year} - ${item.event} <span class="text-2xl">${item.icon}</span></h3>
+                        <p class="text-sm text-gray-500 mb-3">${item.keyFigure}</p>
+                        <p class="text-gray-700">${item.description}</p>
+                        <div class="mt-4 image-generation-section" data-id="${item.id}">
+                             <div id="image-container-${item.id}" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
+                                <span class="text-gray-500">이미지 생성 대기중...</span>
+                            </div>
+                            <div class="hidden retry-section space-y-2">
+                                <input type="text" class="korean-prompt-input w-full p-2 border rounded" value="${item.imagePrompt}">
+                                <button class="retry-btn w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                    🔄 이미지 다시 생성하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                timelineContainer.appendChild(timelineItem);
+                
+                // Render 후 바로 이미지 생성 시작
+                processImageGeneration(item.imagePrompt, `image-container-${item.id}`);
+            });
+        }
+        
+        async function translateToEnglish(text) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: `Translate the following Korean text to English for an image generation prompt. Make it descriptive and vivid: "${text}"` }] }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Translation API error');
+                const result = await response.json();
+                return result.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("Translation failed:", error);
+                // 번역 실패시, 간단한 영어로 대체하거나 에러 처리
+                return "a symbolic image representing the event"; 
+            }
+        }
+        
+        async function processImageGeneration(koreanPrompt, targetId) {
+            const container = document.getElementById(targetId);
+            const section = container.closest('.image-generation-section');
+            const retrySection = section.querySelector('.retry-section');
+
+            if (!koreanPrompt) {
+                container.innerHTML = '<span class="text-red-500">프롬프트가 비어있습니다.</span>';
+                retrySection.classList.remove('hidden');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loader"></div> <p class="text-sm mt-2">프롬프트 번역 및 이미지 생성 중...</p>';
+            retrySection.classList.add('hidden');
+
+            try {
+                const englishPrompt = await translateToEnglish(koreanPrompt);
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                const payload = { instances: [{ "prompt": englishPrompt }], parameters: { "sampleCount": 1 } };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const result = await response.json();
+                if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    container.innerHTML = `<img src="${imageUrl}" alt="${koreanPrompt}" class="w-full h-full object-cover rounded-lg">`;
+                } else {
+                    throw new Error('Image data not found in response.');
+                }
+            } catch (error) {
+                console.error('Error generating image:', error);
+                container.innerHTML = '<span class="text-red-500">이미지 생성 실패! <br>프롬프트를 수정하고 다시 시도하세요.</span>';
+                retrySection.classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('infographic-container').addEventListener('click', e => {
+            if(e.target.classList.contains('retry-btn')) {
+                const section = e.target.closest('.image-generation-section');
+                const newPrompt = section.querySelector('.korean-prompt-input').value;
+                const targetId = section.querySelector('div[id^="image-container-"]').id;
+                processImageGeneration(newPrompt, targetId);
+            }
+        });
+
+        // 초기 렌더링
+        renderWorkshop();
+    </script>
+</body>
+</html>
