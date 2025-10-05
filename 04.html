@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 AI 역사 인포그래픽 만들기</title>
+    <script src="https://cdn-tailwindcss.vercel.app/"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        /* --- Horizontal Timeline Styles --- */
+        .timeline-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 24px;
+        }
+
+        .timeline-wrapper {
+            display: inline-flex;
+            position: relative;
+            padding-top: 50px; /* Space for content above the line */
+        }
+
+        /* The horizontal line */
+        .timeline-wrapper::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20px;
+            height: 3px;
+            width: 100%;
+            background-color: #cbd5e1;
+            z-index: 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            flex: 0 0 340px; /* Width of each card */
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 20px;
+            white-space: normal;
+        }
+        
+        .timeline-item:last-child {
+            margin-right: 0;
+        }
+
+        /* The dot on the timeline */
+        .timeline-dot {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid #4f46e5;
+            z-index: 1;
+        }
+        
+        /* Connector line from dot to card */
+        .timeline-item .w-full::before {
+             content: '';
+             position: absolute;
+             top: 30px;
+             left: 29px;
+             width: 2px;
+             height: 20px; /* Length of the connector */
+             background-color: #e2e8f0;
+             z-index: 0;
+        }
+
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom scrollbar for better aesthetics */
+        .timeline-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .timeline-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .timeline-container::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        .timeline-container::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">나만의 AI 역사 인포그래픽 만들기</h1>
+            <p class="mt-2 text-gray-600">AI 발전의 중요한 순간들을 탐색하고, 자신만의 시각으로 인포그래픽을 완성해보세요.</p>
+        </header>
+
+        <main id="app">
+            <!-- 1. 대상 선택 섹션 -->
+            <section id="audience-selection" class="bg-white p-6 rounded-xl shadow-md mb-8 max-w-3xl mx-auto">
+                <h2 class="text-xl font-semibold mb-4 text-center">1. 학습 대상을 선택해주세요.</h2>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button data-audience="elementary" class="audience-btn bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-lg transition">초등학생</button>
+                    <button data-audience="middle" class="audience-btn bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-5 rounded-lg transition">중학생</button>
+                    <button data-audience="high" class="audience-btn bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-5 rounded-lg transition">고등학생</button>
+                    <button data-audience="general" class="audience-btn bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-5 rounded-lg transition">일반</button>
+                </div>
+            </section>
+
+            <!-- 2. 키워드 조사 및 입력 섹션 -->
+            <section id="keyword-section" class="hidden max-w-3xl mx-auto">
+                <h2 class="text-xl font-semibold mb-4 text-center">2. AI 역사 키워드를 조사하고 내용을 채워보세요.</h2>
+                <div id="keyword-list" class="space-y-4">
+                    <!-- 키워드 카드 템플릿 -->
+                </div>
+                <div class="text-center mt-6">
+                    <button id="add-keyword-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-5 rounded-lg transition">+ 키워드 추가</button>
+                </div>
+            </section>
+            
+            <!-- 3. 인포그래픽 생성 버튼 -->
+            <section id="generation-cta" class="hidden text-center my-10">
+                 <button id="generate-btn" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    나만의 인포그래픽 생성하기
+                </button>
+            </section>
+
+            <!-- 4. 인포그래픽 결과 섹션 -->
+            <section id="infographic-output" class="hidden mt-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-center">AI 역사 인포그래픽</h2>
+                <div id="timeline-container" class="timeline-container">
+                    <!-- 생성된 타임라인 아이템이 여기에 추가됩니다. -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+const App = {
+    state: {
+        selectedAudience: null,
+        keywords: [], // { id, term, year, description, hint, imagePrompt, imageUrl, isGenerating }
+    },
+
+    // 각 대상별 키워드 데이터
+    keywordData: {
+        elementary: [
+            { term: '튜링 테스트', year: '1950', hint: '앨런 튜링이 제안한 기계가 인간처럼 생각할 수 있는지 판별하는 실험이에요. 기계와 대화해서 사람인지 기계인지 구분할 수 없다면, 그 기계는 지능이 있다고 볼 수 있어요.', imagePrompt: '컴퓨터와 사람이 벽을 사이에 두고 키보드로 대화하는 튜링 테스트 장면, 1950년대 스타일의 흑백 사진' },
+            { term: '인공지능(AI) 용어 등장', year: '1956', hint: '존 매카시 교수가 다트머스 회의에서 "생각하는 기계"를 설명하기 위해 처음으로 "인공지능"이라는 말을 사용했어요.', imagePrompt: '여러 명의 과학자들이 대학교 강의실에 모여 토론하는 다트머스 회의 장면, 칠판에 "Artificial Intelligence" 글자가 쓰여있음, 1950년대 분위기' },
+            { term: '알파고와 이세돌 대결', year: '2016', hint: '구글 딥마인드가 개발한 인공지능 알파고가 세계 최고의 바둑 기사 이세돌 9단을 이겨서 전 세계를 놀라게 한 사건이에요.', imagePrompt: '바둑판을 사이에 둔 인공지능 로봇 팔과 바둑기사 이세돌의 긴장감 넘치는 대결, 미래적인 스타일의 디지털 아트' },
+        ],
+        middle: [
+            { term: '튜링 테스트', year: '1950', hint: '앨런 튜링이 기계의 지능을 판별하기 위해 제안한 시험. 심문자가 보이지 않는 상대와 대화하여 인간인지 기계인지 구분하지 못하면 기계가 사고할 수 있다고 판단한다.', imagePrompt: '한 방에 있는 컴퓨터 터미널과 다른 방에 있는 사람이 키보드로 대화하는 모습, 1950년대의 분위기를 살린 세피아 톤 그림' },
+            { term: '다트머스 회의', year: '1956', hint: '존 매카시, 마빈 민스키 등 여러 과학자들이 모여 "생각하는 기계"의 가능성에 대해 논의한 학술회의. 이 회의에서 "인공지능(Artificial Intelligence)"이라는 용어가 공식적으로 탄생했다.', imagePrompt: '여러 명의 과학자들이 칠판 앞에서 열띤 토론을 벌이는 장면, 칠판에는 복잡한 수식과 "AI"라는 단어가 적혀있음, 학구적인 분위기의 유화' },
+            { term: '최초의 챗봇, 엘리자', year: '1966', hint: '조셉 바이첸바움이 개발한 초기 자연어 처리 프로그램. 사용자의 말을 패턴에 맞춰 되묻는 방식으로 인간과 대화하는 것처럼 보이게 했다.', imagePrompt: '초기 컴퓨터 모니터에 나타난 텍스트 기반의 챗봇 엘리자와 대화하는 사람의 옆모습, 1960년대 컴퓨터실 풍경' },
+            { term: 'AI 겨울', year: '1974-1980', hint: 'AI에 대한 기대가 너무 컸지만 기술 발전이 더디고 성과가 부족하자, 정부와 기업의 연구 자금 지원이 크게 줄어든 침체기.', imagePrompt: '눈보라가 치는 황량한 벌판에 얼어붙은 로봇이 서 있는 모습, 회색 톤의 쓸쓸한 분위기를 담은 콘셉트 아트' },
+            { term: '딥블루, 체스 챔피언을 이기다', year: '1997', hint: 'IBM이 개발한 슈퍼컴퓨터 딥블루가 당시 세계 체스 챔피언이었던 가리 카스파로프를 꺾은 역사적인 사건이다.', imagePrompt: '체스판을 사이에 두고 고뇌하는 체스 챔피언과 거대한 슈퍼컴퓨터가 마주한 모습, 지적인 긴장감이 느껴지는 극적인 조명' },
+            { term: '알파고 쇼크', year: '2016', hint: '딥러닝 기술을 활용한 구글 딥마인드의 알파고가 세계 최정상급 바둑 기사 이세돌 9단과의 대국에서 4:1로 승리하며 AI의 발전을 전 세계에 각인시켰다.', imagePrompt: '바둑판의 형상을 한 빛나는 신경망 위에서 바둑돌을 두는 로봇팔과 인간의 두뇌가 대결하는 추상적인 이미지, 사이버펑크 스타일' },
+        ],
+        high: [
+            { term: '튜링 머신과 계산 가능성', year: '1936', hint: '앨런 튜링이 모든 계산 가능한 문제를 해결할 수 있는 가상의 기계 "튜링 머신" 개념을 제시하며 현대 컴퓨터 과학과 AI의 이론적 토대를 마련했다.', imagePrompt: '무한한 길이의 테이프가 움직이는 추상적인 튜링 머신 개념도, 블루프린트 스타일의 정밀한 드로잉' },
+            { term: '퍼셉트론', year: '1958', hint: '프랭크 로젠블랫이 고안한 인공신경망의 초기 모델. 인간의 뇌세포(뉴런) 작동 방식에서 영감을 얻어 패턴 인식 능력을 갖춘 알고리즘을 개발했다.', imagePrompt: '인간의 뇌 뉴런과 연결된 초기 인공신경망 퍼셉트론의 구조를 시각화한 도표, 푸른색의 디지털 회로 느낌' },
+            { term: 'LISP 프로그래밍 언어', year: '1958', hint: '존 매카시가 개발한 AI 연구를 위한 최초의 고급 프로그래밍 언어. 기호 처리와 재귀적 함수에 강점을 보여 오랫동안 AI 연구의 표준 언어로 사용되었다.', imagePrompt: '오래된 컴퓨터 화면에 떠 있는 LISP 코드의 괄호들이 나무의 가지처럼 뻗어나가는 모습, 추상적이고 지적인 이미지' },
+            { term: 'AI 겨울(1, 2차)', year: '1974-1993', hint: 'AI 기술의 한계와 과장된 예측으로 인해 연구 자금이 끊기고 대중의 관심이 식었던 시기. 1차(74~80)와 2차(87~93) AI 겨울이 있었다.', imagePrompt: '회로 기판과 칩들이 눈과 얼음으로 뒤덮여 있는 풍경, 차갑고 정체된 느낌의 디지털 페인팅' },
+            { term: '역전파 알고리즘의 재조명', year: '1986', hint: '데이비드 럼멜하트, 제프리 힌튼 등이 다층 퍼셉트론을 효과적으로 학습시킬 수 있는 역전파 알고리즘을 널리 알리면서 딥러닝 발전의 핵심적인 돌파구를 마련했다.', imagePrompt: '여러 층으로 이루어진 신경망을 따라 정보가 순방향으로 흐르고, 오류가 역방향으로 전파되는 과정을 빛의 흐름으로 표현한 이미지' },
+            { term: '딥러닝의 부상과 AlexNet', year: '2012', hint: '제프리 힌튼 교수팀이 개발한 AlexNet이 이미지넷 이미지 인식 대회(ILSVRC)에서 압도적인 성능으로 우승하며 딥러닝의 시대가 본격적으로 시작되었음을 알렸다.', imagePrompt: '수백만 개의 이미지가 거대한 인공 신경망으로 빨려 들어가 분류되는 모습을 역동적으로 표현, 데이터의 흐름이 느껴지는 3D 시각화' },
+            { term: '트랜스포머 아키텍처 등장', year: '2017', hint: '구글 연구팀이 발표한 논문 "Attention Is All You Need"에서 소개된 모델. 순차적인 데이터 처리 방식에서 벗어나 병렬 처리가 가능한 어텐션 메커니즘을 기반으로 하여 GPT와 같은 현대 거대 언어 모델(LLM)의 기반이 되었다.', imagePrompt: '여러 단어들이 서로의 중요도에 따라 빛나는 선으로 연결되는 어텐션 메커니즘을 시각화한 네트워크, 미래적인 데이터 구조' },
+        ],
+        general: [
+            { term: '튜링 테스트 (Turing Test)', year: '1950', hint: 'Alan Turing이 제안한 기계의 지능을 판별하는 테스트. 인간 심문자가 인간과 기계의 답변을 구분할 수 없다면, 그 기계는 지능적이라고 간주된다.', imagePrompt: '익명의 심문관이 두 개의 터미널을 통해 대화하는 장면. 하나는 사람, 다른 하나는 AI. 미니멀리스트 스타일의 일러스트레이션.' },
+            { term: '다트머스 회의 (Dartmouth Workshop)', year: '1956', hint: 'John McCarthy가 주최한 이 회의에서 "인공지능"이라는 용어가 탄생했으며, AI가 독립적인 학문 분야로 자리 잡는 계기가 되었다.', imagePrompt: '1950년대의 학자들이 다트머스 대학의 강의실에서 열정적으로 토론하는 모습. 칠판에 "Artificial Intelligence"가 쓰여 있다. 빈티지 사진 스타일.' },
+            { term: 'AI의 겨울 (AI Winter)', year: '1974-1980', hint: '초기 AI에 대한 과도한 기대가 실망으로 바뀌면서 연구 자금 지원이 급감했던 시기. AI 연구의 첫 번째 침체기였다.', imagePrompt: '눈보라 속에 반쯤 묻혀있는 구식 로봇의 모습. 절망과 정체의 분위기를 담은 콘셉트 아트.' },
+            { term: '전문가 시스템 (Expert Systems)', year: '1980s', hint: '특정 분야의 전문가 지식을 컴퓨터에 담아 문제 해결 능력을 제공하는 시스템. AI의 상업적 성공 가능성을 보여주었다.', imagePrompt: '의사가 컴퓨터 화면의 전문가 시스템과 상호작용하며 진단을 내리는 모습. 80년대 레트로 퓨처리즘 스타일.' },
+            { term: '역전파 (Backpropagation)', year: '1986', hint: 'Geoffrey Hinton 등에 의해 널리 알려진 알고리즘으로, 다층 신경망 학습을 가능하게 하여 딥러닝 혁명의 핵심 기술이 되었다.', imagePrompt: '데이터가 여러 레이어의 뉴런 네트워크를 통과하고, 오류 신호가 다시 뒤로 전파되는 과정을 보여주는 추상적인 시각화.' },
+            { term: '딥블루 vs. 카스파로프 (Deep Blue vs. Kasparov)', year: '1997', hint: 'IBM의 체스 컴퓨터 딥블루가 세계 체스 챔피언 Garry Kasparov를 이기며, 특정 영역에서 AI가 인간의 지능을 능가할 수 있음을 입증했다.', imagePrompt: '체스판을 사이에 두고 고뇌하는 Garry Kasparov와 거대한 슈퍼컴퓨터 Deep Blue의 실루엣이 마주보는 극적인 장면.' },
+            { term: '알렉스넷의 등장 (AlexNet)', year: '2012', hint: '이미지 인식 대회 ILSVRC에서 AlexNet이 압도적인 성능으로 우승하며, 딥러닝이 컴퓨터 비전 분야의 주류 기술로 부상하는 계기가 되었다.', imagePrompt: '수많은 이미지가 거대한 딥러닝 네트워크 구조로 흘러 들어가는 역동적인 3D 렌더링.' },
+            { term: '트랜스포머와 어텐션 (Transformer & Attention)', year: '2017', hint: 'Google의 논문 "Attention Is All You Need"에서 소개된 트랜스포머 모델은 자연어 처리(NLP) 분야에 혁명을 일으켰고, 현대 LLM의 기반이 되었다.', imagePrompt: '문장의 단어들이 서로 관련성에 따라 연결되는 "어텐션" 메커니즘을 빛의 네트워크로 시각화한 추상적인 아트워크.' },
+        ],
+    },
+
+    init() {
+        document.querySelectorAll('.audience-btn').forEach(button => {
+            button.addEventListener('click', (e) => this.selectAudience(e.target.dataset.audience));
+        });
+        document.getElementById('add-keyword-btn').addEventListener('click', () => this.addKeyword());
+        document.getElementById('generate-btn').addEventListener('click', () => this.generateInfographic());
+
+        // 이벤트 위임(Event Delegation) 설정
+        document.getElementById('keyword-list').addEventListener('click', e => {
+            if (e.target.classList.contains('hint-btn')) {
+                this.toggleHint(e.target.dataset.id);
+            }
+            if (e.target.classList.contains('remove-btn')) {
+                this.removeKeyword(e.target.dataset.id);
+            }
+        });
+
+        document.getElementById('infographic-output').addEventListener('click', e => {
+             if (e.target.classList.contains('regenerate-btn')) {
+                const id = e.target.dataset.id;
+                const newPrompt = document.querySelector(`.prompt-input[data-id="${id}"]`).value;
+                this.regenerateImage(id, newPrompt);
+            }
+        });
+    },
+
+    selectAudience(audience) {
+        this.state.selectedAudience = audience;
+        this.state.keywords = this.keywordData[audience].map((kw, index) => ({
+            id: Date.now() + index,
+            ...kw,
+            description: '', // 사용자가 입력할 공간
+            imageUrl: null,
+            isGenerating: false,
+        }));
+        
+        // Reset infographic when new audience is selected
+        document.getElementById('infographic-output').classList.add('hidden');
+        document.getElementById('timeline-container').innerHTML = '';
+
+
+        document.querySelectorAll('.audience-btn').forEach(btn => {
+            btn.classList.remove('ring-4', 'ring-offset-2', 'ring-indigo-400');
+            if (btn.dataset.audience === audience) {
+                btn.classList.add('ring-4', 'ring-offset-2', 'ring-indigo-400');
+            }
+        });
+
+        document.getElementById('keyword-section').classList.remove('hidden');
+        document.getElementById('generation-cta').classList.remove('hidden');
+        this.renderKeywords();
+    },
+
+    addKeyword() {
+        const newKeyword = {
+            id: Date.now(),
+            term: '',
+            year: '',
+            description: '',
+            hint: '새로운 키워드에 대한 힌트나 조사할 내용을 적어보세요.',
+            imagePrompt: '생성할 이미지에 대한 설명을 자유롭게 작성해주세요. 예) 미래 도시에서 인간과 협력하는 AI 로봇들의 모습, 사이버펑크 스타일',
+            imageUrl: null,
+            isGenerating: false
+        };
+        this.state.keywords.push(newKeyword);
+        this.renderKeywords();
+    },
+
+    removeKeyword(id) {
+        this.state.keywords = this.state.keywords.filter(kw => kw.id !== parseInt(id));
+        this.renderKeywords();
+    },
+    
+    saveKeywordInputs() {
+        this.state.keywords.forEach(kw => {
+            const container = document.getElementById(`keyword-${kw.id}`);
+            if(container) {
+                kw.year = container.querySelector('.year-input').value;
+                kw.term = container.querySelector('.term-input').value;
+                kw.description = container.querySelector('.description-input').value;
+            }
+        });
+    },
+
+    toggleHint(id) {
+        const hintElement = document.querySelector(`.hint-content[data-id="${id}"]`);
+        hintElement.classList.toggle('hidden');
+    },
+
+    renderKeywords() {
+        const listElement = document.getElementById('keyword-list');
+        listElement.innerHTML = this.state.keywords.map(kw => `
+            <div id="keyword-${kw.id}" class="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
+                <div class="flex justify-between items-center mb-3">
+                    <input class="term-input text-lg font-semibold text-indigo-700 bg-gray-100 p-2 rounded w-full" placeholder="키워드" value="${kw.term}">
+                    <button data-id="${kw.id}" class="remove-btn text-red-500 hover:text-red-700 ml-4 font-bold">X</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">시기</label>
+                        <input type="text" class="year-input mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="예: 1950" value="${kw.year}">
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block text-sm font-medium text-gray-700">설명</label>
+                        <textarea class="description-input mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="조사한 내용을 입력하세요.">${kw.description}</textarea>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button data-id="${kw.id}" class="hint-btn text-sm font-medium text-blue-600 hover:text-blue-800">[힌트 보기/숨기기]</button>
+                    <div data-id="${kw.id}" class="hint-content hidden mt-2 p-3 bg-blue-50 border-l-4 border-blue-400 text-blue-700 text-sm rounded-r-lg">
+                       <p>${kw.hint}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    },
+    
+    async generateInfographic() {
+        this.saveKeywordInputs();
+        
+        // 연도순으로 정렬
+        this.state.keywords.sort((a, b) => {
+            const yearA = parseInt(a.year, 10) || 0;
+            const yearB = parseInt(b.year, 10) || 0;
+            return yearA - yearB;
+        });
+
+        const outputSection = document.getElementById('infographic-output');
+        outputSection.classList.remove('hidden');
+        outputSection.scrollIntoView({ behavior: 'smooth' });
+
+        this.renderTimeline(true); // 로딩 상태로 타임라인 렌더링
+
+        for (const keyword of this.state.keywords) {
+            try {
+                keyword.isGenerating = true;
+                this.renderTimeline(true);
+                const imageUrl = await this.generateImageWithBackoff(keyword.imagePrompt);
+                keyword.imageUrl = imageUrl;
+            } catch (error) {
+                console.error(`Image generation failed for "${keyword.term}":`, error);
+                keyword.imageUrl = 'error'; // 에러 상태 표시
+            } finally {
+                keyword.isGenerating = false;
+                this.renderTimeline(false);
+            }
+        }
+    },
+    
+    async regenerateImage(id, newPrompt) {
+        const keyword = this.state.keywords.find(kw => kw.id === parseInt(id));
+        if (!keyword) return;
+
+        keyword.imagePrompt = newPrompt;
+        keyword.isGenerating = true;
+        this.renderTimeline(false); // UI를 로딩 상태로 업데이트
+
+        try {
+            const imageUrl = await this.generateImageWithBackoff(keyword.imagePrompt);
+            keyword.imageUrl = imageUrl;
+        } catch (error) {
+            console.error(`Image regeneration failed for "${keyword.term}":`, error);
+            keyword.imageUrl = 'error';
+        } finally {
+            keyword.isGenerating = false;
+            this.renderTimeline(false);
+        }
+    },
+
+    renderTimeline(isLoading = false) {
+        const container = document.getElementById('timeline-container');
+        const itemsHTML = this.state.keywords.map(kw => this.createTimelineItemHTML(kw, isLoading)).join('');
+        container.innerHTML = `<div class="timeline-wrapper">${itemsHTML}</div>`;
+    },
+    
+    createTimelineItemHTML(kw, initialLoading) {
+        let imageContent = '';
+        if (kw.isGenerating || (initialLoading && !kw.imageUrl)) {
+            imageContent = `<div class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse"><div class="loader"></div></div>`;
+        } else if (kw.imageUrl === 'error') {
+            imageContent = `<div class="w-full h-48 bg-red-100 rounded-lg flex items-center justify-center text-red-600">이미지 생성 실패</div>`;
+        } else if (kw.imageUrl) {
+            imageContent = `<img src="${kw.imageUrl}" alt="${kw.term}" class="w-full h-auto object-cover rounded-lg shadow-md">`;
+        }
+
+        return `
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden relative pt-10">
+                    <div class="p-5">
+                        <p class="text-indigo-600 font-bold text-xl">${kw.year}</p>
+                        <h3 class="text-lg font-semibold my-2">${kw.term}</h3>
+                        <p class="text-gray-600 text-sm">${kw.description || '내용이 없습니다.'}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4">
+                        ${imageContent}
+                        ${(kw.imageUrl && kw.imageUrl !== 'error') || initialLoading === false ? `
+                        <div class="mt-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">이미지 프롬프트 수정</label>
+                            <textarea data-id="${kw.id}" class="prompt-input w-full text-xs p-2 border rounded-md bg-white" rows="3">${kw.imagePrompt}</textarea>
+                            <button data-id="${kw.id}" class="regenerate-btn mt-2 w-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs py-1 px-3 rounded-md transition">이미지 다시 생성</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    async generateImageWithBackoff(prompt) {
+        const apiKey = ""; // API 키는 비워 둡니다.
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+        
+        const payload = {
+            instances: [{ prompt }],
+            parameters: { "sampleCount": 1 }
+        };
+
+        let delay = 1000;
+        for (let i = 0; i < 5; i++) { // 최대 5번 재시도
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.predictions && result.predictions[0] && result.predictions[0].bytesBase64Encoded) {
+                    return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                } else {
+                    throw new Error("Invalid API response structure.");
+                }
+            } catch (error) {
+                console.warn(`Attempt ${i + 1} failed. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // 지연 시간 2배 증가
+            }
+        }
+        throw new Error("Image generation failed after multiple retries.");
+    }
+};
+
+App.init();
+
+</script>
+</body>
+</html>
+
