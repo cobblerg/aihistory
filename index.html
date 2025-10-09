@@ -34,16 +34,16 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+<body class="bg-gray-100 text-gray-800 p-4 sm:p-6 md:p-8">
     <div class="max-w-7xl mx-auto">
         <header class="text-center mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">인공지능 역사 인포그래픽 만들기</h1>
-            <p class="text-gray-400 mt-2">핵심 사건과 인물을 중심으로 AI의 발전 과정을 인포그래픽으로 만들어 보세요.</p>
+            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-600">인공지능 역사 인포그래픽 만들기</h1>
+            <p class="text-gray-600 mt-2">핵심 사건과 인물을 중심으로 AI의 발전 과정을 인포그래픽으로 만들어 보세요.</p>
         </header>
 
         <main>
             <!-- 1. 대상 선택 섹션 -->
-            <section id="level-selection" class="mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+            <section id="level-selection" class="mb-8 p-6 bg-white rounded-xl shadow-lg">
                 <h2 class="text-xl font-semibold mb-4 text-center">1. 인포그래픽을 만들 대상을 선택해 주세요.</h2>
                 <div class="flex flex-wrap justify-center gap-4">
                     <button onclick="selectLevel('elementary')" class="level-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md">초등학생</button>
@@ -54,13 +54,13 @@
             </section>
 
             <!-- 2. 키워드 관리 섹션 -->
-            <section id="keyword-management" class="hidden mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+            <section id="keyword-management" class="hidden mb-8 p-6 bg-white rounded-xl shadow-lg">
                 <h2 class="text-xl font-semibold mb-4 text-center">2. 키워드를 편집하고 추가해 보세요.</h2>
                 <div id="keyword-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- 키워드 카드가 여기에 동적으로 추가됩니다. -->
                 </div>
                 <div class="mt-6 flex justify-center items-center gap-2">
-                    <input type="text" id="new-keyword-input" placeholder="새 키워드 입력" class="w-full max-w-xs bg-gray-800 border border-gray-600 rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500 text-white">
+                    <input type="text" id="new-keyword-input" placeholder="새 키워드 입력" class="w-full max-w-xs bg-white border border-gray-300 rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500 text-gray-800">
                     <button onclick="addKeyword()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                         <span>키워드 추가</span>
@@ -69,20 +69,20 @@
             </section>
             
             <!-- 3. 인포그래픽 생성 섹션 -->
-            <section id="infographic-generation" class="hidden mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+            <section id="infographic-generation" class="hidden mb-8 p-6 bg-white rounded-xl shadow-lg">
                 <div class="text-center mb-6">
                      <h2 class="text-xl font-semibold mb-4 text-center">3. 인포그래픽을 생성하고 이미지를 편집하세요.</h2>
                     <button onclick="generateInfographicPreview()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition-transform transform hover:scale-105">
                         인포그래픽 생성
                     </button>
                 </div>
-                <div id="infographic-preview" class="flex overflow-x-auto space-x-6 p-4 bg-gray-900/50 rounded-lg min-h-[300px]">
+                <div id="infographic-preview" class="flex overflow-x-auto space-x-6 p-4 bg-gray-200 rounded-lg min-h-[300px]">
                     <!-- 인포그래픽 미리보기가 여기에 가로로 표시됩니다. -->
                 </div>
             </section>
             
             <!-- 4. 최종 출력 섹션 -->
-            <section id="final-output" class="hidden text-center p-6 bg-gray-800 rounded-xl shadow-lg">
+            <section id="final-output" class="hidden text-center p-6 bg-white rounded-xl shadow-lg">
                  <h2 class="text-xl font-semibold mb-4 text-center">4. 완성된 인포그래픽을 파일로 저장하세요.</h2>
                 <button onclick="downloadInfographic()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition-transform transform hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -156,29 +156,29 @@
             keywordContainer.innerHTML = '';
             keywordsData.forEach(data => {
                 const card = document.createElement('div');
-                card.className = 'keyword-card bg-gray-700 p-5 rounded-lg shadow-md';
+                card.className = 'keyword-card bg-gray-50 border border-gray-200 p-5 rounded-lg shadow-md';
                 card.dataset.id = data.id;
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-lg font-bold text-cyan-300">${data.term}</h3>
+                        <h3 class="text-lg font-bold text-cyan-500">${data.term}</h3>
                         <button onclick="deleteKeyword('${data.id}')" class="text-red-400 hover:text-red-600">&times; 삭제</button>
                     </div>
                     <div class="space-y-3">
                         <div>
-                            <label for="year-${data.id}" class="text-sm font-medium text-gray-300">시기 (년도)</label>
-                            <input type="text" id="year-${data.id}" value="${data.year}" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">
+                            <label for="year-${data.id}" class="text-sm font-medium text-gray-600">시기 (년도)</label>
+                            <input type="text" id="year-${data.id}" value="${data.year}" class="w-full bg-white border border-gray-300 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">
                         </div>
                         <div>
-                            <label for="desc-${data.id}" class="text-sm font-medium text-gray-300">설명</label>
-                            <textarea id="desc-${data.id}" rows="3" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.description}</textarea>
+                            <label for="desc-${data.id}" class="text-sm font-medium text-gray-600">설명</label>
+                            <textarea id="desc-${data.id}" rows="3" class="w-full bg-white border border-gray-300 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.description}</textarea>
                         </div>
                     </div>
                     <div class="mt-3 text-right">
-                        <button onclick="toggleHint('${data.id}')" class="text-xs text-cyan-400 hover:underline">힌트 보기</button>
+                        <button onclick="toggleHint('${data.id}')" class="text-xs text-cyan-600 hover:underline">힌트 보기</button>
                     </div>
-                    <div id="hint-${data.id}" class="hint mt-3 p-3 bg-gray-800 rounded-md border border-dashed border-gray-500">
-                        <p class="text-sm text-gray-400"><strong>시기:</strong> ${data.hint.year}</p>
-                        <p class="text-sm text-gray-400 mt-1"><strong>설명:</strong> ${data.hint.description}</p>
+                    <div id="hint-${data.id}" class="hint mt-3 p-3 bg-gray-100 rounded-md border border-dashed border-gray-300">
+                        <p class="text-sm text-gray-600"><strong>시기:</strong> ${data.hint.year}</p>
+                        <p class="text-sm text-gray-600 mt-1"><strong>설명:</strong> ${data.hint.description}</p>
                         <button onclick="copyHint('${data.id}')" class="mt-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white py-1 px-2 rounded">복사하기</button>
                     </div>
                 `;
@@ -265,24 +265,24 @@
                 if (!data.year.trim()) return; // 년도 없으면 미리보기에서 제외
 
                 const item = document.createElement('div');
-                item.className = 'infographic-item flex-shrink-0 w-80 bg-gray-800 p-5 rounded-lg shadow-lg';
+                item.className = 'infographic-item flex-shrink-0 w-80 bg-white border border-gray-200 p-5 rounded-lg shadow-lg';
                 item.dataset.id = data.id;
                 
                 item.innerHTML = `
                     <div class="text-center mb-3">
-                        <p class="text-lg font-bold text-cyan-400">${data.year}</p>
+                        <p class="text-lg font-bold text-cyan-600">${data.year}</p>
                         <h4 class="text-xl font-semibold">${data.term}</h4>
                     </div>
-                    <p class="text-sm text-gray-300 h-20 overflow-y-auto mb-4">${data.description}</p>
+                    <p class="text-sm text-gray-600 h-20 overflow-y-auto mb-4">${data.description}</p>
                     
                     <div class="space-y-3">
-                        <div id="image-container-${data.id}" class="w-full h-48 bg-gray-700 rounded-md flex items-center justify-center">
+                        <div id="image-container-${data.id}" class="w-full h-48 bg-gray-200 rounded-md flex items-center justify-center">
                             ${data.imageUrl ? `<img src="${data.imageUrl}" class="w-full h-full object-cover rounded-md">` : '<span class="text-gray-500 text-sm">이미지 없음</span>'}
                              <div id="loader-${data.id}" class="hidden spinner"></div>
                         </div>
                         <div>
-                            <label for="prompt-${data.id}" class="text-xs font-medium text-gray-400">이미지 생성 프롬프트</label>
-                            <textarea id="prompt-${data.id}" rows="2" class="w-full bg-gray-900 text-sm border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.imagePrompt}</textarea>
+                            <label for="prompt-${data.id}" class="text-xs font-medium text-gray-500">이미지 생성 프롬프트</label>
+                            <textarea id="prompt-${data.id}" rows="2" class="w-full bg-gray-50 text-sm border border-gray-300 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.imagePrompt}</textarea>
                         </div>
                         <div class="flex gap-2">
                              <button onclick="generateImage('${data.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 rounded-md">이미지 생성</button>
@@ -451,4 +451,3 @@
     </script>
 </body>
 </html>
-
