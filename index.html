@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인공지능 역사 인포그래픽 만들기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .keyword-card, .infographic-item, .level-button {
+            transition: all 0.3s ease;
+        }
+        .level-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .hint {
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-cyan-400">인공지능 역사 인포그래픽 만들기</h1>
+            <p class="text-gray-400 mt-2">핵심 사건과 인물을 중심으로 AI의 발전 과정을 인포그래픽으로 만들어 보세요.</p>
+        </header>
+
+        <main>
+            <!-- 1. 대상 선택 섹션 -->
+            <section id="level-selection" class="mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-4 text-center">1. 인포그래픽을 만들 대상을 선택해 주세요.</h2>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="selectLevel('elementary')" class="level-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md">초등학생</button>
+                    <button onclick="selectLevel('middle')" class="level-button bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md">중학생</button>
+                    <button onclick="selectLevel('high')" class="level-button bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-md">고등학생</button>
+                    <button onclick="selectLevel('general')" class="level-button bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-md">일반</button>
+                </div>
+            </section>
+
+            <!-- 2. 키워드 관리 섹션 -->
+            <section id="keyword-management" class="hidden mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-4 text-center">2. 키워드를 편집하고 추가해 보세요.</h2>
+                <div id="keyword-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 키워드 카드가 여기에 동적으로 추가됩니다. -->
+                </div>
+                <div class="mt-6 flex justify-center items-center gap-2">
+                    <input type="text" id="new-keyword-input" placeholder="새 키워드 입력" class="w-full max-w-xs bg-gray-800 border border-gray-600 rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500 text-white">
+                    <button onclick="addKeyword()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg transition-transform transform hover:scale-105 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                        <span>키워드 추가</span>
+                    </button>
+                </div>
+            </section>
+            
+            <!-- 3. 인포그래픽 생성 섹션 -->
+            <section id="infographic-generation" class="hidden mb-8 p-6 bg-gray-800 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                     <h2 class="text-xl font-semibold mb-4 text-center">3. 인포그래픽을 생성하고 이미지를 편집하세요.</h2>
+                    <button onclick="generateInfographicPreview()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition-transform transform hover:scale-105">
+                        인포그래픽 생성
+                    </button>
+                </div>
+                <div id="infographic-preview" class="flex overflow-x-auto space-x-6 p-4 bg-gray-900/50 rounded-lg min-h-[300px]">
+                    <!-- 인포그래픽 미리보기가 여기에 가로로 표시됩니다. -->
+                </div>
+            </section>
+            
+            <!-- 4. 최종 출력 섹션 -->
+            <section id="final-output" class="hidden text-center p-6 bg-gray-800 rounded-xl shadow-lg">
+                 <h2 class="text-xl font-semibold mb-4 text-center">4. 완성된 인포그래픽을 파일로 저장하세요.</h2>
+                <button onclick="downloadInfographic()" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg transition-transform transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    인포그래픽 출력 (HTML 파일로 저장)
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 전역 상태 관리
+        let keywordsData = [];
+        const apiKey = ""; // API 키는 여기에 직접 넣지 않습니다. Canvas 환경에서 제공됩니다.
+
+        const keywordPresets = {
+            elementary: [
+                { term: '튜링 테스트', hint: { year: '1950', description: '기계가 사람처럼 생각할 수 있는지 알아보는 시험이에요. 앨런 튜링이라는 사람이 제안했어요.' }, imagePrompt: '컴퓨터와 사람이 대화하는 모습을 그린 밝고 단순한 그림' },
+                { term: '딥블루', hint: { year: '1997', description: '체스를 아주 잘 두는 컴퓨터(인공지능)에요. 세계 체스 챔피언을 이겼어요.' }, imagePrompt: '미래적인 체스판 위에서 로봇 팔이 체스 말을 움직이는 장면, 만화 스타일' },
+                { term: '알파고', hint: { year: '2016', description: '바둑을 아주 잘 두는 인공지능이에요. 세계 최고의 바둑 기사 이세돌 9단을 이겨서 모두를 놀라게 했어요.' }, imagePrompt: '바둑판을 가운데 두고 사람과 로봇이 마주앉아 생각에 잠긴 모습, 따뜻한 색감' },
+            ],
+            middle: [
+                { term: '다트머스 회의', hint: { year: '1956', description: '여러 과학자들이 모여 "생각하는 기계"에 대해 이야기하고, "인공지능"이라는 말을 처음 사용한 역사적인 모임이에요.' }, imagePrompt: '과거 1950년대 분위기의 회의실에서 여러 명의 과학자들이 칠판 앞에서 열정적으로 토론하는 모습, 흑백 톤' },
+                { term: '퍼셉트론', hint: { year: '1957', description: '인간의 뇌 신경망(뉴런)을 흉내 낸 초기 인공신경망 모델이에요. 간단한 패턴을 인식할 수 있었어요.' }, imagePrompt: '뇌의 뉴런 모양과 초기 컴퓨터 회로가 연결되는 모습을 형상화한 다이어그램, 파란색 네온 스타일' },
+                { term: '역전파 알고리즘', hint: { year: '1986', description: '인공신경망이 스스로 학습하며 똑똑해질 수 있게 만든 중요한 수학적 방법이에요. AI 발전의 핵심 기술 중 하나예요.' }, imagePrompt: '여러 겹의 데이터 층을 통과하는 화살표들이 있고, 마지막 층에서 다시 처음으로 피드백이 돌아가는 모습을 시각화한 추상적인 이미지' },
+                { term: '알파고', hint: { year: '2016', description: '딥마인드가 개발한 바둑 인공지능 프로그램으로, 강화학습과 딥러닝을 통해 세계 정상급 프로 바둑 기사 이세돌 9단을 꺾었습니다.' }, imagePrompt: '중앙에 빛나는 바둑판을 두고, 한쪽은 인간의 뇌, 다른 쪽은 디지털 회로 모양이 마주보는 상징적인 이미지' },
+                { term: '트랜스포머 모델', hint: { year: '2017', description: '주로 자연어 처리(우리가 쓰는 언어를 이해하는 기술)에 사용되는 혁신적인 인공신경망 구조에요. ChatGPT 같은 AI의 기반이 되었어요.' }, imagePrompt: '수많은 단어와 문장들이 서로 복잡한 관계로 연결되어 거대한 네트워크를 이루는 모습, 미래적인 스타일' },
+            ],
+            high: [
+                { term: '튜링 머신', hint: { year: '1936', description: '앨런 튜링이 제안한 이론적인 계산 모델로, 현대 컴퓨터의 기본 개념이 되었습니다. 알고리즘과 계산의 개념을 정립했습니다.' }, imagePrompt: '무한한 길이의 테이프와 기호들을 읽고 쓰는 기계 장치를 묘사한 빈티지 설계도 스타일의 그림' },
+                { term: '다트머스 회의', hint: { year: '1956', description: '존 매카시, 마빈 민스키 등이 주도하여 인공지능(Artificial Intelligence)이라는 용어를 공식적으로 탄생시킨 학술회의입니다.' }, imagePrompt: '1950년대의 학자들이 진지한 표정으로 토론하는 장면, 세피아 톤의 사진 스타일' },
+                { term: 'AI의 겨울', hint: { year: '1974-1980', description: 'AI에 대한 기대가 너무 컸지만 기술적 한계와 결과 부족으로 인해 연구 자금 지원이 끊기고 대중의 관심이 식었던 시기입니다.' }, imagePrompt: '눈보라 속에 반쯤 묻혀있는 낡은 로봇과 컴퓨터, 차가운 푸른색 톤' },
+                { term: '이미지넷 챌린지 (AlexNet)', hint: { year: '2012', description: '대규모 이미지 인식 대회에서 AlexNet이라는 딥러닝 모델이 압도적인 성능으로 우승하며, 딥러닝의 부흥을 이끈 결정적인 사건입니다.' }, imagePrompt: '수많은 사진들이 거대한 신경망 네트워크로 빨려 들어가며 고양이, 개, 자동차 등으로 분류되는 모습을 시각화한 이미지' },
+                { term: 'GAN (생성적 적대 신경망)', hint: { year: '2014', description: '이안 굿펠로우가 제안한 비지도 학습 모델로, 진짜 같은 가짜 이미지나 데이터를 생성하는 데 탁월한 성능을 보이며 생성 AI의 발전을 이끌었습니다.' }, imagePrompt: '두 명의 화가가 서로 마주보고 있는데, 한 명은 그림을 그리고 다른 한 명은 그 그림을 평가하며 진짜인지 가짜인지 판별하는 모습을 그린 초현실적인 그림' },
+                { term: 'ChatGPT 출시', hint: { year: '2022', description: 'OpenAI가 출시한 대화형 인공지능 챗봇으로, 놀라운 언어 능력과 상호작용으로 전 세계적인 AI 붐을 일으켰습니다.' }, imagePrompt: '스마트폰 화면 속에서 친근한 AI 캐릭터가 사용자와 자연스럽게 대화하며 질문에 답하고 글을 써주는 모습' },
+            ],
+            general: [
+                { term: '튜링 테스트', hint: { year: '1950', description: '기계가 인간과 얼마나 유사하게 대화할 수 있는지를 기준으로 기계의 지능을 판별하고자 하는 사고 실험. 앨런 튜링에 의해 제안되었다.' }, imagePrompt: '벽을 사이에 두고 한쪽에는 심사위원, 다른쪽에는 사람과 컴퓨터가 각각 타이핑하며 대화하는 미니멀한 일러스트' },
+                { term: '다트머스 회의', hint: { year: '1956', description: '인공지능 분야의 창립으로 여겨지는 학술회의. "AI"라는 용어가 이 회의에서 탄생했으며, 이후 연구의 방향성을 제시했다.' }, imagePrompt: '1950년대 다트머스 대학의 풍경과 함께, 여러 학자들의 실루엣이 회의하는 모습' },
+                { term: 'AI의 겨울', hint: { year: '1974-1980, 1987-1993', description: 'AI 연구에 대한 과도한 기대가 실망으로 바뀌면서 연구 자금과 대중의 관심이 급격히 줄어든 두 차례의 침체기.' }, imagePrompt: '회로 기판 위로 눈이 쌓여 얼어붙은 풍경, 차갑고 어두운 색조' },
+                { term: '딥러닝의 부상 (AlexNet)', hint: { year: '2012', description: '이미지넷 대회에서 AlexNet이 압도적인 성능으로 우승하면서, GPU를 활용한 심층 신경망(Deep Learning)의 잠재력이 증명되고 AI 연구의 패러다임이 전환되었다.' }, imagePrompt: '수많은 이미지 데이터가 GPU 칩으로 흘러 들어가 거대한 다층 신경망을 통과하며 빛을 내는 추상적인 이미지' },
+                { term: 'GAN (생성적 적대 신경망)', hint: { year: '2014', description: '두 개의 신경망(생성자, 판별자)이 서로 경쟁하며 학습하는 비지도 학습 모델. 매우 현실적인 이미지, 사운드, 텍스트 생성에 활용된다.' }, imagePrompt: '위조지폐범(생성자)과 경찰(판별자)이 서로를 속이고 잡아내려고 경쟁하는 모습을 추상적으로 표현한 그림' },
+                { term: '트랜스포머 아키텍처', hint: { year: '2017', description: 'Attention 메커니즘에 기반한 신경망 구조로, 순차적인 데이터 처리의 한계를 극복했다. 현대 자연어 처리 모델(LLM)의 근간이 되었다.' }, imagePrompt: '문장 속의 단어들이 서로 의미적으로 중요한 다른 단어들에게 빛의 선으로 연결되는 모습을 시각화한 네트워크' },
+                { term: '거대 언어 모델(LLM)의 대중화', hint: { year: '2022', description: 'OpenAI의 ChatGPT를 필두로 한 LLM들이 대중에게 공개되면서, 인간과 유사한 수준의 텍스트 생성 및 상호작용 능력을 보여주며 사회 전반에 큰 충격을 주었다.' }, imagePrompt: '평범한 사람이 노트북 앞에서 AI와 대화하며 글쓰기, 코딩, 창작 등 다양한 작업을 함께 하는 모습' },
+            ]
+        };
+
+        // UI 요소
+        const keywordContainer = document.getElementById('keyword-container');
+        const infographicPreview = document.getElementById('infographic-preview');
+
+        // 함수: 대상 선택
+        function selectLevel(level) {
+            keywordsData = JSON.parse(JSON.stringify(keywordPresets[level])).map((item, index) => ({
+                ...item,
+                id: `keyword-${Date.now()}-${index}`,
+                year: '',
+                description: '',
+                imageUrl: null,
+            }));
+            
+            document.getElementById('keyword-management').classList.remove('hidden');
+            document.getElementById('infographic-generation').classList.remove('hidden');
+            document.getElementById('final-output').classList.remove('hidden');
+            
+            renderKeywords();
+            infographicPreview.innerHTML = '<p class="text-gray-500 self-center mx-auto">키워드 편집 후 [인포그래픽 생성] 버튼을 눌러주세요.</p>';
+        }
+
+        // 함수: 키워드 카드 렌더링
+        function renderKeywords() {
+            keywordContainer.innerHTML = '';
+            keywordsData.forEach(data => {
+                const card = document.createElement('div');
+                card.className = 'keyword-card bg-gray-700 p-5 rounded-lg shadow-md';
+                card.dataset.id = data.id;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-bold text-cyan-300">${data.term}</h3>
+                        <button onclick="deleteKeyword('${data.id}')" class="text-red-400 hover:text-red-600">&times; 삭제</button>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="year-${data.id}" class="text-sm font-medium text-gray-300">시기 (년도)</label>
+                            <input type="text" id="year-${data.id}" value="${data.year}" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label for="desc-${data.id}" class="text-sm font-medium text-gray-300">설명</label>
+                            <textarea id="desc-${data.id}" rows="3" class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.description}</textarea>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-right">
+                        <button onclick="toggleHint('${data.id}')" class="text-xs text-cyan-400 hover:underline">힌트 보기</button>
+                    </div>
+                    <div id="hint-${data.id}" class="hint mt-3 p-3 bg-gray-800 rounded-md border border-dashed border-gray-500">
+                        <p class="text-sm text-gray-400"><strong>시기:</strong> ${data.hint.year}</p>
+                        <p class="text-sm text-gray-400 mt-1"><strong>설명:</strong> ${data.hint.description}</p>
+                        <button onclick="copyHint('${data.id}')" class="mt-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white py-1 px-2 rounded">복사하기</button>
+                    </div>
+                `;
+                keywordContainer.appendChild(card);
+            });
+        }
+        
+        // 함수: 힌트 토글
+        function toggleHint(id) {
+            const hintElement = document.getElementById(`hint-${id}`);
+            hintElement.style.display = hintElement.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // 함수: 힌트 복사
+        function copyHint(id) {
+            const data = keywordsData.find(item => item.id === id);
+            if(data) {
+                document.getElementById(`year-${id}`).value = data.hint.year;
+                document.getElementById(`desc-${id}`).value = data.hint.description;
+            }
+        }
+        
+        // 함수: 현재 상태 저장
+        function saveCurrentState() {
+            keywordsData.forEach(data => {
+                const cardElement = document.querySelector(`.keyword-card[data-id="${data.id}"]`);
+                if(cardElement) {
+                    data.year = cardElement.querySelector(`#year-${data.id}`).value;
+                    data.description = cardElement.querySelector(`#desc-${data.id}`).value;
+                }
+                 const previewElement = document.querySelector(`.infographic-item[data-id="${data.id}"]`);
+                if (previewElement) {
+                    data.imagePrompt = previewElement.querySelector(`#prompt-${data.id}`).value;
+                }
+            });
+        }
+        
+        // 함수: 키워드 추가
+        function addKeyword() {
+            saveCurrentState();
+            const inputElement = document.getElementById('new-keyword-input');
+            const newTerm = inputElement.value;
+            if (newTerm && newTerm.trim() !== '') {
+                const newKeyword = {
+                    id: `keyword-${Date.now()}`,
+                    term: newTerm.trim(),
+                    hint: { year: '', description: '직접 조사하여 입력해 보세요.' },
+                    year: '',
+                    description: '',
+                    imagePrompt: `"${newTerm.trim()}"를 상징적으로 나타내는 인공지능 스타일의 이미지`,
+                    imageUrl: null,
+                };
+                keywordsData.push(newKeyword);
+                renderKeywords();
+                inputElement.value = ''; // 입력 필드 초기화
+            }
+        }
+
+        // 함수: 키워드 삭제
+        function deleteKeyword(id) {
+            // confirm() 함수는 현재 환경에서 작동하지 않으므로 확인 절차를 제거했습니다.
+            keywordsData = keywordsData.filter(item => item.id !== id);
+            renderKeywords();
+        }
+        
+        // 함수: 인포그래픽 미리보기 생성
+        function generateInfographicPreview() {
+            saveCurrentState();
+            
+            const sortedData = [...keywordsData].sort((a, b) => {
+                const yearA = parseInt(a.year) || 0;
+                const yearB = parseInt(b.year) || 0;
+                return yearA - yearB;
+            });
+            
+            infographicPreview.innerHTML = '';
+            
+            if (sortedData.length === 0 || sortedData.every(d => !d.year.trim())) {
+                 infographicPreview.innerHTML = '<p class="text-gray-500 self-center mx-auto">시기를 입력한 키워드가 없습니다. 시기를 입력 후 다시 시도해주세요.</p>';
+                 return;
+            }
+
+            sortedData.forEach(data => {
+                if (!data.year.trim()) return; // 년도 없으면 미리보기에서 제외
+
+                const item = document.createElement('div');
+                item.className = 'infographic-item flex-shrink-0 w-80 bg-gray-800 p-5 rounded-lg shadow-lg';
+                item.dataset.id = data.id;
+                
+                item.innerHTML = `
+                    <div class="text-center mb-3">
+                        <p class="text-lg font-bold text-cyan-400">${data.year}</p>
+                        <h4 class="text-xl font-semibold">${data.term}</h4>
+                    </div>
+                    <p class="text-sm text-gray-300 h-20 overflow-y-auto mb-4">${data.description}</p>
+                    
+                    <div class="space-y-3">
+                        <div id="image-container-${data.id}" class="w-full h-48 bg-gray-700 rounded-md flex items-center justify-center">
+                            ${data.imageUrl ? `<img src="${data.imageUrl}" class="w-full h-full object-cover rounded-md">` : '<span class="text-gray-500 text-sm">이미지 없음</span>'}
+                             <div id="loader-${data.id}" class="hidden spinner"></div>
+                        </div>
+                        <div>
+                            <label for="prompt-${data.id}" class="text-xs font-medium text-gray-400">이미지 생성 프롬프트</label>
+                            <textarea id="prompt-${data.id}" rows="2" class="w-full bg-gray-900 text-sm border border-gray-600 rounded-md p-2 mt-1 focus:ring-cyan-500 focus:border-cyan-500">${data.imagePrompt}</textarea>
+                        </div>
+                        <div class="flex gap-2">
+                             <button onclick="generateImage('${data.id}')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-3 rounded-md">이미지 생성</button>
+                             <button onclick="document.getElementById('upload-${data.id}').click()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold py-2 px-3 rounded-md">이미지 업로드</button>
+                             <input type="file" id="upload-${data.id}" class="hidden" accept="image/*" onchange="handleImageUpload(event, '${data.id}')">
+                        </div>
+                    </div>
+                `;
+                infographicPreview.appendChild(item);
+            });
+        }
+
+        // 함수: 이미지 생성 (API 호출)
+        async function generateImage(id) {
+            const data = keywordsData.find(item => item.id === id);
+            if (!data) return;
+
+            const promptText = document.getElementById(`prompt-${id}`).value;
+            const loader = document.getElementById(`loader-${id}`);
+            const imageContainer = document.getElementById(`image-container-${id}`);
+
+            loader.classList.remove('hidden');
+            imageContainer.querySelector('span')?.remove();
+            imageContainer.querySelector('img')?.remove();
+
+            try {
+                const payload = { 
+                    instances: [{ prompt: promptText }],
+                    parameters: { "sampleCount": 1 }
+                };
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.predictions && result.predictions[0].bytesBase64Encoded) {
+                    const base64Data = result.predictions[0].bytesBase64Encoded;
+                    const imageUrl = `data:image/png;base64,${base64Data}`;
+                    data.imageUrl = imageUrl;
+                    
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imageUrl;
+                    imgElement.className = "w-full h-full object-cover rounded-md";
+                    imageContainer.appendChild(imgElement);
+
+                } else {
+                    throw new Error('Invalid API response');
+                }
+
+            } catch (error) {
+                console.error('Image generation failed:', error);
+                imageContainer.innerHTML = '<span class="text-red-400 text-sm">생성 실패</span>';
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+        
+        // 함수: 이미지 업로드 처리
+        function handleImageUpload(event, id) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageUrl = e.target.result;
+                const data = keywordsData.find(item => item.id === id);
+                if (data) {
+                    data.imageUrl = imageUrl;
+                }
+                const imageContainer = document.getElementById(`image-container-${id}`);
+                imageContainer.innerHTML = `<img src="${imageUrl}" class="w-full h-full object-cover rounded-md">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 함수: 인포그래픽 다운로드
+        function downloadInfographic() {
+            saveCurrentState();
+
+            const sortedData = [...keywordsData].sort((a, b) => {
+                const yearA = parseInt(a.year) || 0;
+                const yearB = parseInt(b.year) || 0;
+                return yearA - yearB;
+            });
+            
+            const printContent = sortedData.map(data => {
+                if (!data.year.trim()) return '';
+                return `
+                <div class="item" style="display: flex; align-items: flex-start; margin-bottom: 20px; page-break-inside: avoid;">
+                    <div class="text-content" style="width: 55%; padding-right: 20px; box-sizing: border-box;">
+                        <h2 style="font-size: 16pt; font-weight: bold; color: #007BFF; margin: 0 0 5px 0;">${data.year} - ${data.term}</h2>
+                        <p style="font-size: 11pt; line-height: 1.5; color: #333; margin: 0;">${data.description.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    <div class="image-content" style="width: 45%; box-sizing: border-box;">
+                        ${data.imageUrl ? `<img src="${data.imageUrl}" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">` : '<div style="width: 100%; height: 150px; background-color: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #888;">이미지 없음</div>'}
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            const htmlTemplate = `
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>AI 역사 인포그래픽</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+                        body {
+                            font-family: 'Noto Sans KR', sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #fff;
+                            color: #000;
+                            width: 210mm; /* A4 width */
+                            min-height: 297mm; /* A4 height */
+                        }
+                        .container {
+                            width: 100%;
+                            max-width: 190mm; /* Content width with margin */
+                            margin: 10mm auto; /* A4 margin */
+                            box-sizing: border-box;
+                        }
+                        h1 {
+                            text-align: center;
+                            font-size: 24pt;
+                            color: #333;
+                            border-bottom: 2px solid #eee;
+                            padding-bottom: 10px;
+                            margin-bottom: 20px;
+                        }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                            .container { margin: 0; max-width: 100%; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>인공지능의 역사</h1>
+                        ${printContent}
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const blob = new Blob([htmlTemplate], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'ai_history_infographic.html';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+    </script>
+</body>
+</html>
+
